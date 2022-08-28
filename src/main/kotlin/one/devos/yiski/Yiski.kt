@@ -81,6 +81,16 @@ object Yiski {
             }.await()
 
             logger.info("Logged in and ready!")
+
+            // Channel wiper timer
+            fixedRateTimer("Channel-Wiper", true, midnight, config.bot.resetInterval.hours.inWholeMilliseconds) {
+                launch(Dispatchers.Default) {
+                    logger.info("Vent channel wipe initiated at $dateNow")
+                    clearVentChannel()
+                }
+            }
+
+            logger.info("Vent channel is set to wipe on $midnight")
         }
 
         // Command to manually reset the channel
@@ -102,16 +112,6 @@ object Yiski {
                 event.hook.editMessage(content = "Vent cleared.", components = emptyList()).await()
             } ?: event.hook.editMessage(content = "Timed out.", components = emptyList()).await()
         }
-
-        // Channel wiper timer
-        fixedRateTimer("Channel-Wiper", true, midnight, config.bot.resetInterval.hours.inWholeMilliseconds) {
-            launch(Dispatchers.Default) {
-                logger.info("Vent channel wipe initiated at $dateNow")
-                clearVentChannel()
-            }
-        }
-
-        logger.info("Vent channel is set to wipe on $midnight")
     }
 
     private suspend fun clearVentChannel() {
