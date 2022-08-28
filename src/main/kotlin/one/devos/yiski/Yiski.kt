@@ -1,12 +1,11 @@
 package one.devos.yiski
 
 import dev.minn.jda.ktx.coroutines.await
-import dev.minn.jda.ktx.events.awaitButton
 import dev.minn.jda.ktx.events.listener
 import dev.minn.jda.ktx.events.onCommand
 import dev.minn.jda.ktx.interactions.commands.Command
 import dev.minn.jda.ktx.interactions.commands.updateCommands
-import dev.minn.jda.ktx.interactions.components.danger
+import dev.minn.jda.ktx.interactions.components.*
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
 import dev.minn.jda.ktx.messages.*
@@ -19,6 +18,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.ReadyEvent
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.time.*
 import java.util.Date
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -92,22 +93,27 @@ object Yiski {
 
         // Command to manually reset the channel
         jda.onCommand("reset-vent", timeout = 2.minutes) { event ->
-            val confirm = danger("${Instant.now()}:reset", "Confirm reset")
-
-            event.reply_(
-                "Are you sure you want to **reset** the vent?",
-                components = confirm.into(),
-                ephemeral = true
-            ).queue()
+            val now = Instant.now()
+            event.replyModal(
+                Modal("$now:reset_modal", "You are about to manually reset the vent?") {
+                    short("$now:reset_modal_confirmation", "Are you absolutely sure?", true, placeholder = "yes")
+                }
+            ).timeout(1, TimeUnit.MINUTES).await()
 
             withTimeoutOrNull(1.minutes) {
-                val pressed = event.user.awaitButton(confirm)
-                pressed.deferEdit().queue()
-                event.hook.editMessage(content = "Vent clearing in progress...", components = emptyList()).await()
+                jda.listener<ModalInteractionEvent> { modal ->
+                    if (modal.modalId != "$now:reset_modal") return@listener
+                    val message = modal.deferReply(true).await()
 
-                logger.info("Vent channel has been manually wiped by ${event.user.asTag} (${event.user.id}) at $dateNow")
-                clearVentChannel()
-                event.hook.editMessage(content = "Vent cleared.", components = emptyList()).await()
+                    if (modal.getValue("$now:reset_modal_confirmation")?.asString?.lowercase() == "yes") {
+                        message.editMessage(content = "Vent clearing in progress...").await()
+                        logger.info("Vent channel has been manually wiped by ${event.user.asTag} (${event.user.id}) at $dateNow")
+                        clearVentChannel()
+                        message.editMessage(content = "Vent cleared. \uD83D\uDE38").await()
+                    } else {
+                        message.editMessage(content = "Vent reset canceled.").await()
+                    }
+                }
             } ?: event.hook.editMessage(content = "Timed out.", components = emptyList()).await()
         }
     }
