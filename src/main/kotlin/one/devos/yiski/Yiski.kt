@@ -9,10 +9,7 @@ import dev.minn.jda.ktx.interactions.commands.updateCommands
 import dev.minn.jda.ktx.interactions.components.danger
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
-import dev.minn.jda.ktx.messages.editMessage
-import dev.minn.jda.ktx.messages.into
-import dev.minn.jda.ktx.messages.reply_
-import dev.minn.jda.ktx.messages.send
+import dev.minn.jda.ktx.messages.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -156,16 +153,23 @@ object Yiski {
 
         val encodedData: String = json.encodeToString(SerializedHistory.serializer(), data)
 
-        val attachments = collectedHistory.filter { it.attachments.size > 0 }.map { message ->
-            "[${message.id}] ${message.author.asTag} <${message.author.id}>" to message.attachments.map { "${it.fileName}.${it.fileExtension}" to it.proxy.download().await() }
+        val messageAttachments = collectedHistory.filter { it.attachments.size > 0 }.map { message ->
+            message to message.attachments
+                .filter { it.size <= ventAttachmentChannel.guild.boostTier.maxFileSize }
+                .map { it.fileName to it.proxy.download().await() }
         }
 
-        attachments.forEach { (author, attachments) ->
+        messageAttachments.forEach { (message, attachments) ->
             ventAttachmentChannel.send(
-                content = author,
-                files = attachments.map { (name, file) ->
-                    FileUpload.fromData(file, name)
-                }
+                embeds = listOf(Embed {
+                    author {
+                        name = "${message.author.asTag} <${message.author.id}>"
+                        iconUrl = message.author.effectiveAvatarUrl
+                    }
+                    title = "Message ID: ${message.id}"
+                    if (attachments.isEmpty()) description = "File was either too large to send in this server or was deleted during purge."
+                }),
+                files = attachments.map { (name, file) -> FileUpload.fromData(file, name) }
             ).await()
         }
 
