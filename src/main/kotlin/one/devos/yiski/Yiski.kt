@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.FileUpload
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.time.*
 import java.util.Date
@@ -182,6 +183,28 @@ object Yiski {
 
         ).await()
 
-        ventChannel.deleteMessages(collectedHistory).await()
+        try {
+            ventChannel.deleteMessages(collectedHistory).await()
+        } catch (_: IllegalArgumentException) {
+            try {
+                val modifiedCollection = collectedHistory.filterNot { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
+                ventChannel.deleteMessages(modifiedCollection).queue()
+
+                ventLogChannel.send(embeds = listOf(
+                    Embed {
+                        title = "Admin intervention required"
+                        description = "Messages over 2 weeks have been detected in <#${config.channels.vent}>, manual deletion is required."
+                    }
+                )).queue()
+            } catch (e: Exception) {
+                logger.error("A fatal error has occurred whilst trying to delete messages", e)
+                ventLogChannel.send(embeds = listOf(
+                    Embed {
+                        title = "Developer intervention required"
+                        description = "Something has gone horrible wrong, please check the logs"
+                    }
+                )).queue()
+            }
+        }
     }
 }
