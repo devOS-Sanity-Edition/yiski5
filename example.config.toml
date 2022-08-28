@@ -1,0 +1,22 @@
+[bot]
+# Token of your bot.
+token = "<your token here>"
+# Activivy type you'd like to be displayed.
+activity = "LISTENING"
+# Status to be displayed.
+status = "Screams of the innocent"
+# Timezone your are basing the reset on.
+timezone = "America/Los_Angeles"
+# Interval you want the bot to be reset at in hours.
+resetInterval = 24
+# Time you want the initial reset to occour at, in 24 hour time.
+initialResetHour = 0
+initialResetMinute = 0
+
+[channels]
+# Your vent channel ID.
+vent = "1013350750908325980"
+# The channel ID for vent logs to be sent to.
+ventLog = "1013350764489486336"
+# The channel ID for vent attachments (uploaded files) to be sent to.
+ventAttachments = "1013350780893397054"
