@@ -129,6 +129,9 @@ object Yiski {
             .filterNot { it.isWebhookMessage }
             .asReversed()
 
+        // return if the channelHistory is empty, in consequence this will not trigger a log.
+        if (collectedHistory.isEmpty()) return
+
         val serializedHistory = collectedHistory.map {
             SerializedHistory.SerializedMessage(
                 messageId = it.idLong,
