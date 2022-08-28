@@ -25,7 +25,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.FileUpload
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.time.*
 import java.util.Date
@@ -184,27 +183,33 @@ object Yiski {
         ).await()
 
         try {
-            ventChannel.deleteMessages(collectedHistory).await()
-        } catch (_: IllegalArgumentException) {
-            try {
-                val modifiedCollection = collectedHistory.filterNot { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
-                ventChannel.deleteMessages(modifiedCollection).queue()
+            val messagesOverTwoWeeks = collectedHistory.filter { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
+            val messages = collectedHistory.filterNot { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
 
+            if (messages.size > 1) {
+                for (messagesChunk in messages.chunked(200)) {
+                    ventChannel.deleteMessages(messagesChunk).await()
+                }
+            } else {
+                ventChannel.deleteMessageById(messages.first().id).await()
+            }
+
+            if (messagesOverTwoWeeks.isNotEmpty()) {
                 ventLogChannel.send(embeds = listOf(
                     Embed {
                         title = "Admin intervention required"
                         description = "Messages over 2 weeks have been detected in <#${config.channels.vent}>, manual deletion is required."
                     }
                 )).queue()
-            } catch (e: Exception) {
-                logger.error("A fatal error has occurred whilst trying to delete messages", e)
-                ventLogChannel.send(embeds = listOf(
-                    Embed {
-                        title = "Developer intervention required"
-                        description = "Something has gone horrible wrong, please check the logs"
-                    }
-                )).queue()
             }
+        } catch (e: Exception) {
+            logger.error("A fatal error has occurred whilst trying to delete messages", e)
+            ventLogChannel.send(embeds = listOf(
+                Embed {
+                    title = "Developer intervention required"
+                    description = "Something has gone horrible wrong, please check the logs"
+                }
+            )).queue()
         }
     }
 }
