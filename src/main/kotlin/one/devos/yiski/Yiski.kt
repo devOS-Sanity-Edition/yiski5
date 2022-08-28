@@ -50,7 +50,7 @@ object Yiski {
     private val midnight: Date
         get() {
             val timeNow = LocalDate.now()
-            val midnight = LocalDateTime.of(timeNow, LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
+            val midnight = LocalDateTime.of(timeNow.plusDays(1), LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
             return Date.from(midnight.atZone(timezone).toInstant())
         }
 
