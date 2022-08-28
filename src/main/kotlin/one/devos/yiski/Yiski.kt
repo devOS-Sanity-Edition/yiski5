@@ -103,6 +103,7 @@ object Yiski {
             withTimeoutOrNull(1.minutes) {
                 val pressed = event.user.awaitButton(confirm)
                 pressed.deferEdit().queue()
+                event.hook.editMessage(content = "Vent clearing in progress...", components = emptyList()).await()
 
                 logger.info("Vent channel has been manually wiped by ${event.user.asTag} (${event.user.id}) at $dateNow")
                 clearVentChannel()
