@@ -9,8 +9,6 @@ import dev.minn.jda.ktx.interactions.components.*
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
 import dev.minn.jda.ktx.messages.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
@@ -44,12 +42,12 @@ object Yiski {
 
     private lateinit var jda: JDA
 
-    // Calculates the next midnight as a getter.
-    private val midnight: Date
+    // Calculates the next time as a getter.
+    private val resetTime: Date
         get() {
             val timeNow = LocalDate.now()
-            val midnight = LocalDateTime.of(timeNow.plusDays(1), LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
-            return Date.from(midnight.atZone(timezone).toInstant())
+            val destinationTime = LocalDateTime.of(timeNow.plusDays(1), LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
+            return Date.from(destinationTime.atZone(timezone).toInstant())
         }
 
     private val dateNow: Date
@@ -81,14 +79,12 @@ object Yiski {
             logger.info("Logged in and ready!")
 
             // Channel wiper timer
-            fixedRateTimer("Channel-Wiper", true, midnight, config.bot.resetInterval.hours.inWholeMilliseconds) {
-                launch(Dispatchers.Default) {
-                    logger.info("Vent channel wipe initiated at $dateNow")
-                    clearVentChannel()
-                }
+            fixedRateTimer("Channel-Wiper", false, resetTime, config.bot.resetInterval.hours.inWholeMilliseconds) {
+                logger.info("Vent channel wipe initiated at $dateNow")
+                clearVentChannel()
             }
 
-            logger.info("Vent channel is set to wipe on $midnight")
+            logger.info("Vent channel is set to wipe on $resetTime")
         }
 
         // Command to manually reset the channel
@@ -118,15 +114,15 @@ object Yiski {
         }
     }
 
-    private suspend fun clearVentChannel() {
+    private fun clearVentChannel() {
         val ventChannel = jda.getTextChannelById(config.channels.vent) ?: return logger.error("Vent channel <${config.channels.vent}> doesn't exist.")
         val ventLogChannel = jda.getTextChannelById(config.channels.ventLog) ?: return logger.error("Vent log channel <${config.channels.ventLog}> doesn't exist.")
         val ventAttachmentChannel = jda.getTextChannelById(config.channels.ventAttachments) ?: return logger.error("Vent attachment channel <${config.channels.ventAttachments}> doesn't exist.")
         val history = mutableListOf<Message>()
-        val getHistory = ventChannel.getHistoryFromBeginning(100).await()
+        val getHistory = ventChannel.getHistoryFromBeginning(100).complete()
 
         history.addAll(getHistory.retrievedHistory)
-        history.addAll(getHistory.retrieveFuture(100).await())
+        history.addAll(getHistory.retrieveFuture(100).complete())
 
         val collectedHistory = history
             .filterNot { it.isPinned }
@@ -163,7 +159,7 @@ object Yiski {
         val messageAttachments = collectedHistory.filter { it.attachments.size > 0 }.map { message ->
             message to message.attachments
                 .filter { it.size <= ventAttachmentChannel.guild.boostTier.maxFileSize }
-                .map { it.fileName to it.proxy.download().await() }
+                .map { it.fileName to it.proxy.download().get() }
         }
 
         messageAttachments.forEach { (message, attachments) ->
@@ -177,7 +173,7 @@ object Yiski {
                     if (attachments.isEmpty()) description = "File was either too large to send in this server or was deleted during purge."
                 }),
                 files = attachments.map { (name, file) -> FileUpload.fromData(file, name) }
-            ).await()
+            ).complete()
         }
 
         val formattedDate = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(Date())
@@ -186,7 +182,7 @@ object Yiski {
             content = "Vent log for $formattedDate",
             files = listOf(FileUpload.fromData(encodedData.encodeToByteArray(), "$formattedDate.json"))
 
-        ).await()
+        ).complete()
 
         try {
             val messagesOverTwoWeeks = collectedHistory.filter { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
@@ -194,10 +190,10 @@ object Yiski {
 
             if (messages.size > 1) {
                 for (messagesChunk in messages.chunked(200)) {
-                    ventChannel.deleteMessages(messagesChunk).await()
+                    ventChannel.deleteMessages(messagesChunk).complete()
                 }
             } else {
-                ventChannel.deleteMessageById(messages.first().id).await()
+                ventChannel.deleteMessageById(messages.first().id).complete()
             }
 
             if (messagesOverTwoWeeks.isNotEmpty()) {
