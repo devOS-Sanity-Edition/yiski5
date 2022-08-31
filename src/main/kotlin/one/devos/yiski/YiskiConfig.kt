@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
             val activity: String = "LISTENING",
             val status: String = "Screams of the innocent",
             val timezone: String = "America/Los_Angeles",
+            val daysAhead: Long = 1,
             val resetInterval: Long = 24,
             val initialResetHour: Long = 0,
             val initialResetMinute: Long = 0

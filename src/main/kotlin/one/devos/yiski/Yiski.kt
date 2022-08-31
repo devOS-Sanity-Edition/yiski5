@@ -25,10 +25,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.time.*
-import java.util.Date
+import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration.Companion.hours
+import kotlin.concurrent.schedule
 import kotlin.time.Duration.Companion.minutes
 
 object Yiski {
@@ -45,8 +44,7 @@ object Yiski {
     // Calculates the next time as a getter.
     private val resetTime: Date
         get() {
-            val timeNow = LocalDate.now()
-            val destinationTime = LocalDateTime.of(timeNow.plusDays(1), LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
+            val destinationTime = LocalDateTime.of(LocalDate.now().plusDays(config.bot.daysAhead), LocalTime.of(config.bot.initialResetHour.toInt(), config.bot.initialResetMinute.toInt()))
             return Date.from(destinationTime.atZone(timezone).toInstant())
         }
 
@@ -78,13 +76,9 @@ object Yiski {
 
             logger.info("Logged in and ready!")
 
-            // Channel wiper timer
-            fixedRateTimer("Channel-Wiper", false, resetTime, config.bot.resetInterval.hours.inWholeMilliseconds) {
-                logger.info("Vent channel wipe initiated at $dateNow")
-                clearVentChannel()
-            }
-
-            logger.info("Vent channel is set to wipe on $resetTime")
+            // Mayhem starts here
+            // Let the Dragons sleep else there will be a fire in the server closet (in this case, an RPI 4)
+            setTimer()
         }
 
         // Command to manually reset the channel
@@ -111,6 +105,14 @@ object Yiski {
                     }
                 }
             } ?: event.hook.editMessage(content = "Timed out.", components = emptyList()).await()
+        }
+    }
+
+    private fun setTimer(): TimerTask {
+        logger.info("Vent channel is set to wipe on $resetTime")
+        return Timer().schedule(resetTime, config.bot.resetInterval.minutes.inWholeMilliseconds) {
+            logger.info("Vent channel wipe initiated at $dateNow")
+            clearVentChannel()
         }
     }
 
@@ -155,6 +157,8 @@ object Yiski {
         )
 
         val encodedData: String = json.encodeToString(SerializedHistory.serializer(), data)
+
+        logger.debug("Encoded JSON data of the vent: \n$encodedData")
 
         val messageAttachments = collectedHistory.filter { it.attachments.size > 0 }.map { message ->
             message to message.attachments

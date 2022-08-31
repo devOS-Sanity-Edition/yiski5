@@ -7,8 +7,11 @@ activity = "LISTENING"
 status = "Screams of the innocent"
 # Timezone your are basing the reset on.
 timezone = "America/Los_Angeles"
-# Interval you want the bot to be reset at in hours.
-resetInterval = 24
+# How many days into the future do you want this to initially start on, if doing a midnight
+# I recommend 1 (else you select the previous and it starts instantly)
+daysAhead = 1
+# Interval you want the bot to be reset at in minutes.
+resetInterval = 1440
 # Time you want the initial reset to occour at, in 24 hour time.
 initialResetHour = 0
 initialResetMinute = 0
