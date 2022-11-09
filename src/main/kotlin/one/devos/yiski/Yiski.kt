@@ -193,7 +193,7 @@ object Yiski {
             val messages = collectedHistory.filterNot { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
 
             if (messages.size > 1) {
-                for (messagesChunk in messages.chunked(190)) {
+                for (messagesChunk in messages.chunked(99)) {
                     ventChannel.deleteMessages(messagesChunk).complete()
                 }
             } else {
