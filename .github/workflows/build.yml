@@ -26,7 +26,14 @@ jobs:
         with:
           arguments: shadowJar
 
-      - uses: actions/upload-artifact@v3
+      - name: 'Yiski5: Fat Edition'
+        uses: actions/upload-artifact@v3
         with:
-          name: Package
-          path: build/libs
+          name: Fat-jar
+          path: build/libs/Yiski5-Fat.jar
+
+      - name: 'Yiski5'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Yiski5
+          path: build/libs/Yiski5-${{ github.sha }}.jar
