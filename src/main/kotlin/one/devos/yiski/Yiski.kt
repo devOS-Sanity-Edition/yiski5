@@ -193,8 +193,19 @@ object Yiski {
             val messages = collectedHistory.filterNot { it.timeCreated.isBefore(OffsetDateTime.now().minusDays(14)) }
 
             if (messages.size > 1) {
-                for (messagesChunk in messages.chunked(99)) {
-                    ventChannel.deleteMessages(messagesChunk).complete()
+                val messageChunks = messages.chunked(80)
+                messageChunks.forEachIndexed { index, chunk ->
+                    try {
+                        ventChannel.deleteMessages(chunk).queue()
+                    } catch (e: Exception) {
+                        logger.error("Something went wrong trying to bulk-delete chunk $index/${messageChunks.size}", e)
+                        ventLogChannel.send(embeds = listOf(
+                            Embed {
+                                title = "Developer intervention required"
+                                description = "Failed to delete bulk-delete chunk $index/${messageChunks.size}, please refer to the logs."
+                            }
+                        )).queue()
+                    }
                 }
             } else {
                 ventChannel.deleteMessageById(messages.first().id).complete()
