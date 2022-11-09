@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "one.devos"
-version = "5.0"
+version = System.getenv("GITHUB_SHA") ?: "Unknown"
 
 repositories {
     mavenCentral()
@@ -46,7 +46,7 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<ShadowJar> {
-    archiveFileName.set("Yiski.jar")
+    archiveFileName.set("Yiski5-Fat.jar")
     manifest {
         attributes(
             mapOf(
