@@ -1,0 +1,6 @@
+services:
+  yiski5:
+    container_name: Yiski5
+    image: ghcr.io/devos-sanity-edition/yiski5:main
+    volumes:
+      - ./config.toml:/app/config.toml
