@@ -31,7 +31,7 @@ dependencies {
     implementation("com.akuleshov7:ktoml-core:0.3.0")
     implementation("com.akuleshov7:ktoml-file:0.3.0")
     // JDA
-    implementation("com.github.DV8FromtheWorld:JDA:v5.0.0-alpha.22") {
+    implementation("com.github.DV8FromtheWorld:JDA:v5.0.0-beta.10") {
         exclude(module = "opus-java")
     }
     // Kotlin Extensions for JDA
