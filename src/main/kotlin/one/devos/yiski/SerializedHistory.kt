@@ -27,8 +27,10 @@ data class SerializedHistory(
         val messageId: Long,
         @SerialName("author-id")
         val authorId: Long,
+        @SerialName("author-display")
+        val authorDisplay: String,
         @SerialName("author-readable")
-        val authorTag: String,
+        val authorName: String,
         val content: String,
         val embeds: Int,
         val attachments: Int,

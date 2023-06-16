@@ -97,7 +97,7 @@ object Yiski {
 
                     if (modal.getValue("$now:reset_modal_confirmation")?.asString?.lowercase() == "yes") {
                         message.editMessage(content = "Vent clearing in progress...").await()
-                        logger.info("Vent channel has been manually wiped by ${event.user.asTag} (${event.user.id}) at $dateNow")
+                        logger.info("Vent channel has been manually wiped by ${event.user.name} (${event.user.id}) at $dateNow")
                         clearVentChannel()
                         message.editMessage(content = "Vent cleared. \uD83D\uDE38").await()
                     } else {
@@ -138,7 +138,8 @@ object Yiski {
             SerializedHistory.SerializedMessage(
                 messageId = it.idLong,
                 authorId = it.author.idLong,
-                authorTag = it.author.asTag,
+                authorDisplay = it.author.effectiveName,
+                authorName = it.author.name,
                 content = it.contentRaw,
                 embeds = it.embeds.count(),
                 attachments = it.attachments.count()
@@ -170,7 +171,7 @@ object Yiski {
             ventAttachmentChannel.send(
                 embeds = listOf(Embed {
                     author {
-                        name = "${message.author.asTag} <${message.author.id}>"
+                        name = "${message.author.name} <${message.author.id}>"
                         iconUrl = message.author.effectiveAvatarUrl
                     }
                     title = "Message ID: ${message.id}"
