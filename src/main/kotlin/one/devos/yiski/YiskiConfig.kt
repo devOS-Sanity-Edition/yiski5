@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
     data class YiskiConfig(
         val bot: BotConfig,
         val channels: ChannelConfig,
+        val filters: FiltersConfig
     ) {
         @Serializable
         data class BotConfig(
@@ -24,5 +25,15 @@ import kotlinx.serialization.Serializable
             val vent: String,
             val ventLog: String,
             val ventAttachments: String
+        )
+
+        @Serializable
+        data class FiltersConfig(
+            val webhooks: Boolean,
+            val bots: Boolean,
+            val pinned: Boolean,
+            val system: Boolean,
+            val messages: List<Long>,
+            val authors: List<Long>
         )
     }

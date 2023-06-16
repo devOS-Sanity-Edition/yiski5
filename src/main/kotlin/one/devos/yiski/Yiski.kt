@@ -74,7 +74,7 @@ object Yiski {
                 )
             }.await()
 
-            logger.info("Logged in and ready!")
+            logger.info("Logged in as @${jda.selfUser.name} <${jda.selfUser.id}> and ready!")
 
             // Mayhem starts here
             // Let the Dragons sleep else there will be a fire in the server closet (in this case, an RPI 4)
@@ -126,10 +126,15 @@ object Yiski {
         history.addAll(getHistory.retrievedHistory)
         history.addAll(getHistory.retrieveFuture(100).complete())
 
-        val collectedHistory = history
-            .filterNot { it.isPinned }
-            .filterNot { it.isWebhookMessage }
+        var collectedHistory = history
+            .filterNot { config.filters.messages.contains(it.idLong) }
+            .filterNot { config.filters.authors.contains(it.author.idLong) }
             .asReversed()
+
+        if (config.filters.pinned) collectedHistory = collectedHistory.filterNot { it.isPinned }
+        if (config.filters.webhooks) collectedHistory = collectedHistory.filterNot { it.isWebhookMessage }
+        if (config.filters.bots) collectedHistory = collectedHistory.filterNot { it.author.isBot }
+        if (config.filters.system) collectedHistory = collectedHistory.filterNot { it.author.isSystem }
 
         // return if the channelHistory is empty, in consequence this will not trigger a log.
         if (collectedHistory.isEmpty()) return

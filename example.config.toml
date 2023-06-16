@@ -1,4 +1,4 @@
-[bot]
+[bot] # Essential settings for the bot.
 # Token of your bot.
 token = "<your token here>"
 # Activivy type you'd like to be displayed.
@@ -16,10 +16,24 @@ resetInterval = 1440
 initialResetHour = 0
 initialResetMinute = 0
 
-[channels]
+[channels] # Channel related settings.
 # Your vent channel ID.
 vent = "1013350750908325980"
 # The channel ID for vent logs to be sent to.
 ventLog = "1013350764489486336"
 # The channel ID for vent attachments (uploaded files) to be sent to.
 ventAttachments = "1013350780893397054"
+
+[filters] # Message types the bot will filter out of the wipe (true = not removed).
+# Webhook messages.
+webhooks = false
+# Bot messages.
+bots = false
+# System messages.
+system = true
+# Pinned messages.
+pinned = true
+# A list of message IDs to not be removed.
+messages = [1119278191845064745, 1119035738487525446]
+# A list of user IDs to not remove the messages of.
+authors = [466378653216014359, 356268235697553409]

@@ -9,8 +9,8 @@ object Config {
 
     fun loadConfig(): YiskiConfig {
         Yiski.logger.info("Loading config from $configPath...")
-        try {
-            return TomlFileReader.decodeFromFile(serializer(), configPath)
+        return try {
+            TomlFileReader.decodeFromFile(serializer(), configPath)
         } catch (e: Exception) {
             Yiski.logger.error("Failed to load config", e)
             exitProcess(1)
