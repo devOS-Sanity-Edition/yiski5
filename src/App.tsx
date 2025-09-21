@@ -1,33 +1,49 @@
-import { createSignal } from 'solid-js'
-import solidLogo from './assets/solid.svg'
-import viteLogo from '/vite.svg'
+// @ts-nocheck
+
+import { createSignal, For } from 'solid-js'
+import devOSLogo from './assets/devOS.png'
 import './App.css'
 
 function App() {
-  const [count, setCount] = createSignal(0)
+  const [selectedFile, setSelectedFile] = createSignal<File | null>(null)
+  const [fileContent, setFileContent] = createSignal<object | null>(null)
+
+  const handleFileChange = (event: Event) => {
+    if (event.target instanceof HTMLInputElement) {
+      if (event.target.files == null) return;
+      const file = event.target.files[0]; // Get the first selected file
+      setSelectedFile(file);
+
+      file.text().then(text => setFileContent(JSON.parse(text))).catch(err => console.log(err));
+    }
+  };
 
   return (
     <>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} class="logo" alt="Vite logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={solidLogo} class="logo solid" alt="Solid logo" />
+        <a href="https://devos.one" target="_blank">
+          <img src={devOSLogo} class="logo" alt="devOS logo" />
         </a>
       </div>
-      <h1>Vite + Solid</h1>
-      <div class="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count()}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div>
+        <input type="file" placeholder="Vent JSON"  onChange={handleFileChange} />
+        <br />
+        { fileContent() && <div>
+          <h1>{ fileContent()["data"]["date"] }</h1>
+          <discord-messages style="text-align: left;">
+            <For each={ fileContent()["messages"] }>
+              { (item) => (
+                <>
+                  <discord-message author={ item["author-display"] } avatar="https://cdn.discordapp.com/avatars/1013204104706789469/e0d96859aca59314fffef5a32c3778c1.webp?size=32">
+                    { item["attachments"] > 0 ? `[attachment message-id ${item["message-id"]}]` : item["content"] }
+                  </discord-message>
+                </>
+              ) }
+            </For>
+          </discord-messages>
+        </div> }
+        {/*{selectedFile() && <p>File content: {JSON.stringify(fileContent()!!)}</p>}*/}
       </div>
-      <p class="read-the-docs">
-        Click on the Vite and Solid logos to learn more
-      </p>
     </>
   )
 }
