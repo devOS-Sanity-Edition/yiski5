@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { createSignal, For } from 'solid-js'
+import { DiscordMessage } from "./components/DiscordMessage.tsx"
 import devOSLogo from './assets/devOS.png'
 import './App.css'
 
@@ -30,17 +31,17 @@ function App() {
         <br />
         { fileContent() && <div>
           <h1>{ fileContent()["data"]["date"] }</h1>
-          <discord-messages style="text-align: left;">
+          <div class="discord-messages" style="text-align: left;">
             <For each={ fileContent()["messages"] }>
               { (item) => (
                 <>
-                  <discord-message author={ item["author-display"] } avatar="https://cdn.discordapp.com/avatars/1013204104706789469/e0d96859aca59314fffef5a32c3778c1.webp?size=32">
+                  <DiscordMessage author={ item["author-display"] } avatar="https://cdn.discordapp.com/avatars/1013204104706789469/e0d96859aca59314fffef5a32c3778c1.webp?size=32" timestamp={fileContent()["data"]["date"]}>
                     { item["attachments"] > 0 ? `[attachment message-id ${item["message-id"]}]` : item["content"] }
-                  </discord-message>
+                  </DiscordMessage>
                 </>
               ) }
             </For>
-          </discord-messages>
+          </div>
         </div> }
         {/*{selectedFile() && <p>File content: {JSON.stringify(fileContent()!!)}</p>}*/}
       </div>

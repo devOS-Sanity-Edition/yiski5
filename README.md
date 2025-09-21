@@ -1,3 +1,12 @@
+# devOS Yiski 5 Vent Viewer
+
+Built in SolidJS with components modified from [Danktuary/wc-discord-message](https://github.com/Danktuary/wc-discord-message)
+This is by no means done in a good way, it was just a hack job quick project.
+
+Container image available for our hosting reasons, you probably have no reason to use this.
+
+The following is the default Vite SolidJS readme template lol
+
 ## Usage
 
 ```bash
